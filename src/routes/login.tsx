@@ -6,8 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Sparkles, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { apiFetch } from "@/lib/api";
-import { saveAuth } from "@/lib/auth";
-import { getToken } from "@/lib/auth";
+import { saveAuth, getToken, isTokenValid  } from "@/lib/auth";
+import toast from "react-hot-toast";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -44,7 +44,7 @@ function AuthPage() {
   });
 
   useEffect(() => {
-    if (getToken()) {
+    if (isTokenValid()) {
       navigate({
         to: "/dashboard",
         replace: true,
@@ -56,7 +56,7 @@ function AuthPage() {
     e.preventDefault();
 
     if (isSignup && form.password !== form.confirmPassword) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
 
@@ -90,12 +90,12 @@ function AuthPage() {
       }
 
       if (!response.ok) {
-        alert(data.message);
+        toast.error(data.message);
         return;
       }
 
       if (isSignup) {
-        alert(data.message);
+        toast.success(data.message);
 
         setIsSignup(false);
 
@@ -109,8 +109,14 @@ function AuthPage() {
         return;
       }
 
-      if (!data.token) {
-        alert("Invalid login response.");
+      if (
+        !data.token ||
+        data.id === undefined ||
+        data.name === undefined ||
+        data.email === undefined ||
+        data.role === undefined
+      ) {
+        toast.error("Invalid login response.");
         return;
       }
 
@@ -121,14 +127,14 @@ function AuthPage() {
         role: data.role,
       });
 
-      alert(data.message);
+      toast.success(data.message);
 
       navigate({
         to: "/dashboard",
         replace: true,
       });
     } catch {
-      alert("Something went wrong.");
+      toast.error("Something went wrong.");
     } finally {
       setLoading(false);
     }

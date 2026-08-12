@@ -1,3 +1,14 @@
+export interface DashboardResponse {
+  hero: HeroSection;
+  metrics: DashboardMetrics;
+  readinessTrend: ReadinessTrend[];
+  skillRadar: SkillRadar[];
+  weeklyActivity: WeeklyActivity[];
+  topicDistribution: TopicDistribution[];
+  activities: Activity[];
+  upcomingTasks: UpcomingTask[];
+}
+
 export interface HeroSection {
   fullName: string;
   targetCompany: string;
@@ -55,24 +66,4 @@ export interface UpcomingTask {
   priority: string;
   dueDate: string;
   progress: number;
-}
-
-export interface Leaderboard {
-  userId: number;
-  name: string;
-  xp: number;
-  streak: number;
-  rank: number;
-  currentUser: boolean;
-}
-
-export interface DashboardResponse {
-  hero: HeroSection;
-  metrics: DashboardMetrics;
-  readinessTrend: ReadinessTrend[];
-  skillRadar: SkillRadar[];
-  weeklyActivity: WeeklyActivity[];
-  topicDistribution: TopicDistribution[];
-  activities: Activity[];
-  upcomingTasks: UpcomingTask[];
 }

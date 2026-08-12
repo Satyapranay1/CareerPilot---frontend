@@ -53,8 +53,8 @@ const features: NavItem[] = [
     icon: Code2,
   },
   {
-    to: "/behavioral",
-    label: "Behavioral",
+    to: "/interview",
+    label: "Interview",
     icon: MessagesSquare,
   },
   {

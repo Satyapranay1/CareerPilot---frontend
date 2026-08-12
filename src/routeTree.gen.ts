@@ -12,9 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
-import { Route as BehavioralRouteImport } from './routes/behavioral'
 import { Route as CodingRouteImport } from './routes/coding'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as InterviewRouteImport } from './routes/interview'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResumeRouteImport } from './routes/resume'
@@ -35,11 +35,6 @@ const AnalyticsRoute = AnalyticsRouteImport.update({
   path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
-const BehavioralRoute = BehavioralRouteImport.update({
-  id: '/behavioral',
-  path: '/behavioral',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const CodingRoute = CodingRouteImport.update({
   id: '/coding',
   path: '/coding',
@@ -48,6 +43,11 @@ const CodingRoute = CodingRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InterviewRoute = InterviewRouteImport.update({
+  id: '/interview',
+  path: '/interview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -75,9 +75,9 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
-  '/behavioral': typeof BehavioralRoute
   '/coding': typeof CodingRoute
   '/dashboard': typeof DashboardRoute
+  '/interview': typeof InterviewRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
@@ -87,9 +87,9 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
-  '/behavioral': typeof BehavioralRoute
   '/coding': typeof CodingRoute
   '/dashboard': typeof DashboardRoute
+  '/interview': typeof InterviewRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
@@ -100,9 +100,9 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
-  '/behavioral': typeof BehavioralRoute
   '/coding': typeof CodingRoute
   '/dashboard': typeof DashboardRoute
+  '/interview': typeof InterviewRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
@@ -114,9 +114,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/analytics'
-    | '/behavioral'
     | '/coding'
     | '/dashboard'
+    | '/interview'
     | '/login'
     | '/profile'
     | '/resume'
@@ -126,9 +126,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/analytics'
-    | '/behavioral'
     | '/coding'
     | '/dashboard'
+    | '/interview'
     | '/login'
     | '/profile'
     | '/resume'
@@ -138,9 +138,9 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/analytics'
-    | '/behavioral'
     | '/coding'
     | '/dashboard'
+    | '/interview'
     | '/login'
     | '/profile'
     | '/resume'
@@ -151,9 +151,9 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AnalyticsRoute: typeof AnalyticsRoute
-  BehavioralRoute: typeof BehavioralRoute
   CodingRoute: typeof CodingRoute
   DashboardRoute: typeof DashboardRoute
+  InterviewRoute: typeof InterviewRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   ResumeRoute: typeof ResumeRoute
@@ -183,13 +183,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/behavioral': {
-      id: '/behavioral'
-      path: '/behavioral'
-      fullPath: '/behavioral'
-      preLoaderRoute: typeof BehavioralRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/coding': {
       id: '/coding'
       path: '/coding'
@@ -202,6 +195,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/interview': {
+      id: '/interview'
+      path: '/interview'
+      fullPath: '/interview'
+      preLoaderRoute: typeof InterviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -239,9 +239,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AnalyticsRoute: AnalyticsRoute,
-  BehavioralRoute: BehavioralRoute,
   CodingRoute: CodingRoute,
   DashboardRoute: DashboardRoute,
+  InterviewRoute: InterviewRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   ResumeRoute: ResumeRoute,
