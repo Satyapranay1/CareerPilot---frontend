@@ -143,6 +143,8 @@ export function Dashboard() {
 
   const [error, setError] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     let mounted = true;
 
