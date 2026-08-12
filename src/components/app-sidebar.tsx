@@ -34,7 +34,7 @@ type NavItem = {
 
 const dashboard: NavItem[] = [
   {
-    to: "/",
+    to: "/dashboard",
     label: "Dashboard",
     icon: LayoutDashboard,
   },
@@ -53,8 +53,8 @@ const features: NavItem[] = [
     icon: Code2,
   },
   {
-    to: "/behavioral",
-    label: "Behavioral",
+    to: "/interview",
+    label: "Interview",
     icon: MessagesSquare,
   },
   {
@@ -143,7 +143,7 @@ export function AppSidebar() {
     >
       <SidebarHeader className="px-3 py-4">
         <Link
-          to="/"
+          to="/dashboard"
           className="flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-sidebar-accent"
         >
           <div className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-violet-600 via-blue-600 to-cyan-500 shadow-lg">

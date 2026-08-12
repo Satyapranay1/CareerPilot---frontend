@@ -1,56 +1,323 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Sparkles, Github, Chrome } from "lucide-react";
+import { Sparkles, Eye, EyeOff } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
+import { apiFetch } from "@/lib/api";
+import { saveAuth, getToken, isTokenValid  } from "@/lib/auth";
+import toast from "react-hot-toast";
 
 export const Route = createFileRoute("/login")({
-  head: () => ({ meta: [{ title: "Sign in · InterviewOS AI" }] }),
-  component: LoginPage,
+  head: () => ({
+    meta: [{ title: "Authentication · InterviewOS AI" }],
+  }),
+  component: AuthPage,
 });
 
-function LoginPage() {
+type AuthResponse = {
+  message: string;
+  token?: string;
+  id?: number;
+  name?: string;
+  email?: string;
+  role?: string;
+};
+
+function AuthPage() {
+  const navigate = useNavigate();
+
+  const [isSignup, setIsSignup] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  useEffect(() => {
+    if (isTokenValid()) {
+      navigate({
+        to: "/dashboard",
+        replace: true,
+      });
+    }
+  }, [navigate]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (isSignup && form.password !== form.confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const payload = isSignup
+        ? {
+            name: form.name,
+            email: form.email,
+            password: form.password,
+          }
+        : {
+            email: form.email,
+            password: form.password,
+          };
+
+      const response = await apiFetch(isSignup ? "/auth/register" : "/auth/login", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      });
+
+      let data: AuthResponse;
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {
+          message: "Something went wrong.",
+        };
+      }
+
+      if (!response.ok) {
+        toast.error(data.message);
+        return;
+      }
+
+      if (isSignup) {
+        toast.success(data.message);
+
+        setIsSignup(false);
+
+        setForm({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+        });
+
+        return;
+      }
+
+      if (
+        !data.token ||
+        data.id === undefined ||
+        data.name === undefined ||
+        data.email === undefined ||
+        data.role === undefined
+      ) {
+        toast.error("Invalid login response.");
+        return;
+      }
+
+      saveAuth(data.token, {
+        id: data.id,
+        name: data.name,
+        email: data.email,
+        role: data.role,
+      });
+
+      toast.success(data.message);
+
+      navigate({
+        to: "/dashboard",
+        replace: true,
+      });
+    } catch {
+      toast.error("Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="relative grid min-h-screen w-full lg:grid-cols-2">
+      {/* Left Side */}
       <div className="relative hidden overflow-hidden lg:block">
         <div className="absolute inset-0 gradient-brand" />
         <div className="absolute inset-0 grid-bg opacity-20" />
         <div className="absolute -left-16 top-1/3 size-96 rounded-full bg-white/15 blur-3xl" />
         <div className="absolute bottom-10 right-10 size-72 rounded-full bg-white/10 blur-3xl" />
+
         <div className="relative z-10 flex h-full flex-col justify-between p-10 text-white">
-          <div className="flex items-center gap-2 text-lg font-semibold"><Sparkles className="size-5" />InterviewOS AI</div>
-          <div className="max-w-md space-y-4">
-            <p className="text-3xl font-semibold leading-tight">The AI-powered career OS for software engineers.</p>
-            <p className="text-white/80">Resume analysis, personalized roadmaps, and realistic mock interviews — all in one premium workspace.</p>
+          <div className="flex items-center gap-2 text-lg font-semibold">
+            <Sparkles className="size-5" />
+            InterviewOS AI
           </div>
-          <div className="text-xs text-white/60">© {new Date().getFullYear()} InterviewOS AI · Trusted by 12,000+ engineers</div>
+
+          <div className="max-w-md space-y-4">
+            <p className="text-3xl font-semibold leading-tight">
+              The AI-powered career OS for software engineers.
+            </p>
+
+            <p className="text-white/80">
+              Resume analysis, coding practice and interview preparation in one premium platform.
+            </p>
+          </div>
+
+          <div className="text-xs text-white/60">
+            {/* © {new Date().getFullYear()} InterviewOS AI */}
+          </div>
         </div>
       </div>
 
-      <div className="relative flex items-center justify-center bg-background p-6">
+      {/* Right Side */}
+      <div className="flex items-center justify-center bg-background p-6">
         <div className="w-full max-w-sm">
           <div className="mb-6 flex items-center gap-2 lg:hidden">
-            <div className="grid size-8 place-items-center rounded-lg gradient-brand text-white shadow-glow"><Sparkles className="size-4" /></div>
-            <span className="text-sm font-semibold">InterviewOS AI</span>
+            <div className="grid size-8 place-items-center rounded-lg gradient-brand text-white">
+              <Sparkles className="size-4" />
+            </div>
+            <span className="font-semibold">InterviewOS AI</span>
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Welcome back</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Sign in to continue your prep.</p>
 
-          <div className="mt-6 grid gap-2">
-            <Button variant="outline" className="w-full gap-2"><Chrome className="size-4" />Continue with Google</Button>
-            <Button variant="outline" className="w-full gap-2"><Github className="size-4" />Continue with GitHub</Button>
-          </div>
-          <div className="my-5 flex items-center gap-3 text-[11px] uppercase tracking-widest text-muted-foreground">
-            <Separator className="flex-1" /> or <Separator className="flex-1" />
-          </div>
-          <form className="space-y-3">
-            <div className="space-y-1.5"><Label htmlFor="e">Email</Label><Input id="e" type="email" placeholder="you@work.com" /></div>
-            <div className="space-y-1.5"><Label htmlFor="p">Password</Label><Input id="p" type="password" placeholder="••••••••" /></div>
-            <Button type="submit" className="w-full gradient-brand text-white shadow-glow">Sign in</Button>
+          <h1 className="text-2xl font-semibold">{isSignup ? "Create Account" : "Welcome Back"}</h1>
+
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isSignup
+              ? "Create your InterviewOS AI account."
+              : "Sign in to continue your preparation."}
+          </p>
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-3">
+            {isSignup && (
+              <div className="space-y-1.5 mt-3">
+                <Label htmlFor="name">Full Name</Label>
+                <Input
+                  id="name"
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      name: e.target.value,
+                    })
+                  }
+                  required
+                />
+              </div>
+            )}
+
+            <div className="space-y-1.5  mt-3">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={form.email}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    email: e.target.value,
+                  })
+                }
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="password">Password</Label>
+
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={form.password}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      password: e.target.value,
+                    })
+                  }
+                  required
+                  className="pr-10"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
+              </div>
+            </div>
+
+            {isSignup && (
+              <div className="space-y-1.5">
+                <Label htmlFor="confirmPassword">Confirm Password</Label>
+
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={form.confirmPassword}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        confirmPassword: e.target.value,
+                      })
+                    }
+                    required
+                    className="pr-10"
+                  />
+
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <Button
+              type="submit"
+              disabled={loading}
+              className="w-full gradient-brand text-white shadow-glow"
+            >
+              {loading ? "Please wait..." : isSignup ? "Create Account" : "Sign In"}
+            </Button>
           </form>
-          <p className="mt-4 text-xs text-muted-foreground">
-            Don't have an account? <Link to="/" className="font-medium text-primary hover:underline">Start free trial</Link>
+
+          <p className="mt-5 text-center text-sm text-muted-foreground">
+            {isSignup ? (
+              <>
+                Already have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setIsSignup(false)}
+                  className="font-medium text-primary hover:underline"
+                >
+                  Sign In
+                </button>
+              </>
+            ) : (
+              <>
+                Don't have an account?{" "}
+                <button
+                  type="button"
+                  onClick={() => setIsSignup(true)}
+                  className="font-medium text-primary hover:underline"
+                >
+                  Create Account
+                </button>
+              </>
+            )}
           </p>
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { type ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { ArrowDownRight, ArrowUpRight, type LucideIcon } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Badge, type LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 export function PageHeader({
@@ -169,21 +169,37 @@ export function EmptyState({
   );
 }
 
-export function DifficultyPill({ level }: { level: string }) {
-  const map: Record<string, string> = {
-    Easy: "bg-success/10 text-success ring-success/20",
-    Medium: "bg-warning/15 text-warning ring-warning/25",
-    Hard: "bg-destructive/10 text-destructive ring-destructive/20",
-  };
+export function DifficultyPill({
+  level,
+}: {
+  level: string;
+}) {
+  const difficulty = String(level ?? "").toUpperCase();
+
+  let displayName = level;
+  let styles = "border-border bg-background text-foreground";
+
+  if (difficulty === "EASY") {
+    displayName = "Easy";
+    styles =
+      "border-green-500 bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400";
+  } else if (difficulty === "MEDIUM") {
+    displayName = "Medium";
+    styles =
+      "border-yellow-500 bg-yellow-50 text-yellow-700 dark:bg-yellow-950/30 dark:text-yellow-400";
+  } else if (difficulty === "HARD") {
+    displayName = "Hard";
+    styles =
+      "border-red-500 bg-red-50 text-red-700 dark:bg-red-950/30 dark:text-red-400";
+  }
+
   return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] font-medium ring-1 ring-inset",
-        map[level] ?? "bg-muted text-muted-foreground ring-border",
-      )}
+    <Badge
+      variant="outline"
+      className={styles}
     >
-      {level}
-    </span>
+      {displayName}
+    </Badge>
   );
 }
 

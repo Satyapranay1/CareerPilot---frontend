@@ -10,11 +10,14 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as BehavioralRouteImport } from './routes/behavioral'
 import { Route as CodingRouteImport } from './routes/coding'
 import { Route as CompaniesRouteImport } from './routes/companies'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as InterviewRouteImport } from './routes/interview'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as ResumeRouteImport } from './routes/resume'
@@ -23,6 +26,11 @@ import { Route as SettingsRouteImport } from './routes/settings'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ActivityRoute = ActivityRouteImport.update({
+  id: '/activity',
+  path: '/activity',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminRoute = AdminRouteImport.update({
@@ -50,6 +58,16 @@ const CompaniesRoute = CompaniesRouteImport.update({
   path: '/companies',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InterviewRoute = InterviewRouteImport.update({
+  id: '/interview',
+  path: '/interview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -73,11 +91,14 @@ const SettingsRoute = SettingsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/behavioral': typeof BehavioralRoute
   '/coding': typeof CodingRoute
   '/companies': typeof CompaniesRoute
+  '/dashboard': typeof DashboardRoute
+  '/interview': typeof InterviewRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
@@ -85,11 +106,14 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/behavioral': typeof BehavioralRoute
   '/coding': typeof CodingRoute
   '/companies': typeof CompaniesRoute
+  '/dashboard': typeof DashboardRoute
+  '/interview': typeof InterviewRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
@@ -98,11 +122,14 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/activity': typeof ActivityRoute
   '/admin': typeof AdminRoute
   '/analytics': typeof AnalyticsRoute
   '/behavioral': typeof BehavioralRoute
   '/coding': typeof CodingRoute
   '/companies': typeof CompaniesRoute
+  '/dashboard': typeof DashboardRoute
+  '/interview': typeof InterviewRoute
   '/login': typeof LoginRoute
   '/profile': typeof ProfileRoute
   '/resume': typeof ResumeRoute
@@ -112,11 +139,14 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/activity'
     | '/admin'
     | '/analytics'
     | '/behavioral'
     | '/coding'
     | '/companies'
+    | '/dashboard'
+    | '/interview'
     | '/login'
     | '/profile'
     | '/resume'
@@ -124,11 +154,14 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/activity'
     | '/admin'
     | '/analytics'
     | '/behavioral'
     | '/coding'
     | '/companies'
+    | '/dashboard'
+    | '/interview'
     | '/login'
     | '/profile'
     | '/resume'
@@ -136,11 +169,14 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/activity'
     | '/admin'
     | '/analytics'
     | '/behavioral'
     | '/coding'
     | '/companies'
+    | '/dashboard'
+    | '/interview'
     | '/login'
     | '/profile'
     | '/resume'
@@ -149,11 +185,14 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ActivityRoute: typeof ActivityRoute
   AdminRoute: typeof AdminRoute
   AnalyticsRoute: typeof AnalyticsRoute
   BehavioralRoute: typeof BehavioralRoute
   CodingRoute: typeof CodingRoute
   CompaniesRoute: typeof CompaniesRoute
+  DashboardRoute: typeof DashboardRoute
+  InterviewRoute: typeof InterviewRoute
   LoginRoute: typeof LoginRoute
   ProfileRoute: typeof ProfileRoute
   ResumeRoute: typeof ResumeRoute
@@ -167,6 +206,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/activity': {
+      id: '/activity'
+      path: '/activity'
+      fullPath: '/activity'
+      preLoaderRoute: typeof ActivityRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin': {
@@ -204,6 +250,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CompaniesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/interview': {
+      id: '/interview'
+      path: '/interview'
+      fullPath: '/interview'
+      preLoaderRoute: typeof InterviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -237,11 +297,14 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ActivityRoute: ActivityRoute,
   AdminRoute: AdminRoute,
   AnalyticsRoute: AnalyticsRoute,
   BehavioralRoute: BehavioralRoute,
   CodingRoute: CodingRoute,
   CompaniesRoute: CompaniesRoute,
+  DashboardRoute: DashboardRoute,
+  InterviewRoute: InterviewRoute,
   LoginRoute: LoginRoute,
   ProfileRoute: ProfileRoute,
   ResumeRoute: ResumeRoute,
