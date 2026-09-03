@@ -28,11 +28,11 @@ export interface ProfileResponse {
   email: string;
   shortBio: string;
   role: string;
+  profilePicture?: string;
   education: Education[];
   experience: Experience[];
   skills: Skill[];
 }
-
 export interface ExperienceRequest {
   company: string;
   jobTitle: string;

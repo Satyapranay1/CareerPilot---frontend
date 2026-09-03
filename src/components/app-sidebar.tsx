@@ -57,11 +57,6 @@ const features: NavItem[] = [
     label: "Interview",
     icon: MessagesSquare,
   },
-  {
-    to: "/analytics",
-    label: "Analytics",
-    icon: BarChart3,
-  },
 ];
 
 const account: NavItem[] = [
@@ -69,12 +64,7 @@ const account: NavItem[] = [
     to: "/profile",
     label: "Profile",
     icon: User,
-  },
-  {
-    to: "/settings",
-    label: "Settings",
-    icon: Settings,
-  },
+  }
 ];
 
 export function AppSidebar() {

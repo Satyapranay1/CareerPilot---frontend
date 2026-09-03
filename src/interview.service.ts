@@ -105,4 +105,32 @@ export const InterviewService = {
 
     return response.json();
   },
+
+  async getAnswers(
+  sessionId: number
+): Promise<AnswerEvaluationResponse[]> {
+  const response = await apiFetch(
+    `/interviews/${sessionId}/answers`
+  );
+
+  if (!response.ok) {
+    throw new Error("Unable to load interview answers");
+  }
+
+  return response.json();
+},
+
+async getAttempts(
+  sessionId: number
+): Promise<AnswerEvaluationResponse[]> {
+  const response = await apiFetch(
+    `/interviews/${sessionId}/attempts`
+  );
+
+  if (!response.ok) {
+    throw new Error("Unable to load interview attempts");
+  }
+
+  return response.json();
+}
 };

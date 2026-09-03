@@ -20,6 +20,7 @@ export interface HeroSection {
 }
 
 export interface DashboardMetrics {
+  completedInterviews: number;
   atsScore: number;
   resumeQuality: number;
   interviewReadiness: number;

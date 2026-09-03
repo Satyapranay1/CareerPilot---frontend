@@ -12,7 +12,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivityRouteImport } from './routes/activity'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AnalyticsRouteImport } from './routes/analytics'
 import { Route as BehavioralRouteImport } from './routes/behavioral'
 import { Route as CodingRouteImport } from './routes/coding'
 import { Route as CompaniesRouteImport } from './routes/companies'
@@ -36,11 +35,6 @@ const ActivityRoute = ActivityRouteImport.update({
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AnalyticsRoute = AnalyticsRouteImport.update({
-  id: '/analytics',
-  path: '/analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BehavioralRoute = BehavioralRouteImport.update({
@@ -93,7 +87,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/admin': typeof AdminRoute
-  '/analytics': typeof AnalyticsRoute
   '/behavioral': typeof BehavioralRoute
   '/coding': typeof CodingRoute
   '/companies': typeof CompaniesRoute
@@ -108,7 +101,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/admin': typeof AdminRoute
-  '/analytics': typeof AnalyticsRoute
   '/behavioral': typeof BehavioralRoute
   '/coding': typeof CodingRoute
   '/companies': typeof CompaniesRoute
@@ -124,7 +116,6 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/activity': typeof ActivityRoute
   '/admin': typeof AdminRoute
-  '/analytics': typeof AnalyticsRoute
   '/behavioral': typeof BehavioralRoute
   '/coding': typeof CodingRoute
   '/companies': typeof CompaniesRoute
@@ -141,7 +132,6 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/admin'
-    | '/analytics'
     | '/behavioral'
     | '/coding'
     | '/companies'
@@ -156,7 +146,6 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/admin'
-    | '/analytics'
     | '/behavioral'
     | '/coding'
     | '/companies'
@@ -171,7 +160,6 @@ export interface FileRouteTypes {
     | '/'
     | '/activity'
     | '/admin'
-    | '/analytics'
     | '/behavioral'
     | '/coding'
     | '/companies'
@@ -187,7 +175,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ActivityRoute: typeof ActivityRoute
   AdminRoute: typeof AdminRoute
-  AnalyticsRoute: typeof AnalyticsRoute
   BehavioralRoute: typeof BehavioralRoute
   CodingRoute: typeof CodingRoute
   CompaniesRoute: typeof CompaniesRoute
@@ -220,13 +207,6 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/analytics': {
-      id: '/analytics'
-      path: '/analytics'
-      fullPath: '/analytics'
-      preLoaderRoute: typeof AnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/behavioral': {
@@ -299,7 +279,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ActivityRoute: ActivityRoute,
   AdminRoute: AdminRoute,
-  AnalyticsRoute: AnalyticsRoute,
   BehavioralRoute: BehavioralRoute,
   CodingRoute: CodingRoute,
   CompaniesRoute: CompaniesRoute,

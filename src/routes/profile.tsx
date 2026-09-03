@@ -1,35 +1,49 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import { PageHeader, SectionCard } from "@/components/ui-kit";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Award, Briefcase, GraduationCap, MapPin, Sparkles } from "lucide-react";
-import { useEffect, useState } from "react";
-import { apiFetch } from "@/lib/api";
-import type {
-  ProfileResponse,
-  Experience,
-  ExperienceRequest,
-  Education,
-  EducationRequest,
-  Skill,
-  SkillRequest,
-} from "@/features/profile/types";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import toast from "react-hot-toast";
-import { LoadingSpinner } from "./LoadingSpinner";
+  PageHeader,
+  SectionCard,
+} from "@/components/ui-kit";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { LoadingSpinner } from "@/routes/LoadingSpinner";
+import { apiFetch } from "@/lib/api";
+import { toast } from "sonner";
+
+import {
+  Camera,
+  User,
+  Mail,
+  Briefcase,
+  Github,
+  Linkedin,
+  MapPin,
+  LogOut,
+  Trash2,
+  Save,
+  FileText,
+  Code2,
+  X,
+  GraduationCap,
+  Plus,
+} from "lucide-react";
+
+import { useEffect, useRef, useState } from "react";
+
+/* ============================================================
+   ROUTE
+   ============================================================ */
 
 export const Route = createFileRoute("/profile")({
-  head: () => ({ meta: [{ title: "Profile · InterviewOS AI" }] }),
+  head: () => ({
+    meta: [
+      {
+        title: "Profile · CareerPilot",
+      },
+    ],
+  }),
+
   component: () => (
     <AppShell>
       <ProfilePage />
@@ -37,823 +51,1903 @@ export const Route = createFileRoute("/profile")({
   ),
 });
 
+/* ============================================================
+   TYPES
+   ============================================================ */
+
+interface Experience {
+  id?: number;
+  company: string;
+  role: string;
+  location?: string;
+  startDate: string;
+  endDate?: string;
+  current: boolean;
+  description?: string;
+}
+
+interface Education {
+  id?: number;
+  institution: string;
+  degree: string;
+  field?: string;
+  startDate?: string;
+  endDate?: string;
+  grade?: string;
+}
+
+interface ProfileData {
+  id?: number;
+  name?: string;
+  email?: string;
+  shortBio?: string;
+  role?: string;
+  profilePicture?: string;
+}
+
+/* ============================================================
+   PROFILE PAGE
+   ============================================================ */
+
 function ProfilePage() {
-  const [profile, setProfile] = useState<ProfileResponse | null>(null);
+  /* ==========================================================
+     BASIC PROFILE STATE
+     ========================================================== */
+
   const [loading, setLoading] = useState(true);
-  const [bio, setBio] = useState("");
-  const [experiences, setExperiences] = useState<Experience[]>([]);
-  const [editExperience, setEditExperience] = useState<Experience | null>(null);
-  const [isAddExperienceOpen, setIsAddExperienceOpen] = useState(false);
-  const [experienceForm, setExperienceForm] = useState({
-    company: "",
-    jobTitle: "",
-    startDate: "",
-    endDate: "",
-    description: "",
+
+  const [saving, setSaving] = useState(false);
+
+  const [profile, setProfile] =
+  useState<ProfileData>({
+    name: "",
+    email: "",
+    shortBio: "",
+    role: "",
+    profilePicture: "",
   });
 
-  const [education, setEducation] = useState<Education[]>([]);
-  const [editEducation, setEditEducation] = useState<Education | null>(null);
-  const [isAddEducationOpen, setIsAddEducationOpen] = useState(false);
+  const [skillsText, setSkillsText] =
+    useState("");
 
-  const [educationForm, setEducationForm] = useState({
-    institution: "",
-    degree: "",
-    fieldOfStudy: "",
-    startYear: 0,
-    endYear: 0,
-    grade: "",
-  });
+  /* ==========================================================
+     EXPERIENCE STATE
+     ========================================================== */
 
-  const [skills, setSkills] = useState<Skill[]>([]);
-  const [editSkill, setEditSkill] = useState<Skill | null>(null);
-  const [isAddSkillOpen, setIsAddSkillOpen] = useState(false);
+  const [experiences, setExperiences] =
+    useState<Experience[]>([]);
 
-  const [skillForm, setSkillForm] = useState({
-    skillName: "",
-  });
+  const [showExperienceForm, setShowExperienceForm] =
+    useState(false);
 
-  const openAddExperience = () => {
-    setEditExperience(null);
-
-    setExperienceForm({
+  const [newExperience, setNewExperience] =
+    useState<Experience>({
       company: "",
-      jobTitle: "",
+      role: "",
+      location: "",
       startDate: "",
       endDate: "",
+      current: false,
       description: "",
     });
 
-    setIsAddExperienceOpen(true);
-  };
+  /* ==========================================================
+     EDUCATION STATE
+     ========================================================== */
 
-  const openEditExperience = (experience: Experience) => {
-    setEditExperience(experience);
+  const [education, setEducation] =
+    useState<Education[]>([]);
 
-    setExperienceForm({
-      company: experience.company,
-      jobTitle: experience.jobTitle,
-      startDate: experience.startDate,
-      endDate: experience.endDate ?? "",
-      description: experience.description,
-    });
-  };
+  const [showEducationForm, setShowEducationForm] =
+    useState(false);
 
-  const openAddEducation = () => {
-    setEditEducation(null);
-
-    setEducationForm({
+  const [newEducation, setNewEducation] =
+    useState<Education>({
       institution: "",
       degree: "",
-      fieldOfStudy: "",
-      startYear: new Date().getFullYear(),
-      endYear: new Date().getFullYear(),
+      field: "",
+      startDate: "",
+      endDate: "",
       grade: "",
     });
 
-    setIsAddEducationOpen(true);
-  };
+  /* ==========================================================
+     PROFILE IMAGE
+     ========================================================== */
 
-  const openEditEducation = (education: Education) => {
-    setEditEducation(education);
+  const [profileImage, setProfileImage] = useState<string | null>(null);
 
-    setEducationForm({
-      institution: education.institution,
-      degree: education.degree,
-      fieldOfStudy: education.fieldOfStudy,
-      startYear: education.startYear,
-      endYear: education.endYear,
-      grade: education.grade ?? "",
-    });
-  };
+  const profileImageInputRef =
+    useRef<HTMLInputElement>(null);
 
-  const addSkill = async (skill: SkillRequest) => {
-    const response = await apiFetch("/auth/skills", {
-      method: "POST",
-      body: JSON.stringify(skill),
-    });
+  /* ==========================================================
+     LOAD PROFILE
+     ========================================================== */
+
+  const loadProfile = async () => {
+  try {
+    setLoading(true);
+
+    const response =
+      await apiFetch("/auth/profile");
 
     if (!response.ok) {
-      throw new Error("Unable to add skill.");
+      throw new Error(
+        `Failed to load profile: ${response.status}`
+      );
     }
 
-    const created = await response.json();
+    const data =
+      await response.json();
 
-    setSkills((prev) => [...prev, created]);
-  };
-
-  const updateSkill = async (id: number, skill: SkillRequest) => {
-    const response = await apiFetch(`/auth/skills/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(skill),
-    });
-
-    if (!response.ok) {
-      throw new Error("Unable to update skill.");
-    }
-
-    const updated = await response.json();
-
-    setSkills((prev) => prev.map((s) => (s.id === id ? updated : s)));
-  };
-
-  const deleteSkill = async (id: number) => {
-    const response = await apiFetch(`/auth/skills/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      throw new Error("Unable to delete skill.");
-    }
-
-    setSkills((prev) => prev.filter((s) => s.id !== id));
-  };
-
-  const saveBio = async () => {
-    try {
-      const response = await apiFetch("/auth/bio", {
-        method: "PUT",
-        body: JSON.stringify({
-          shortBio: bio,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update bio");
-      }
-
-      const updated = await response.json();
-
-      setProfile(updated);
-      setBio(updated.shortBio);
-
-      toast.success("Bio updated successfully.");
-    } catch (error) {
-      console.error(error);
-      toast.error("Unable to update bio.");
-    }
-  };
-  useEffect(() => {
-    const loadProfile = async () => {
-      try {
-        const response = await apiFetch("/auth/profile");
-
-        if (!response.ok) {
-          throw new Error("Failed to load profile");
-        }
-
-        const data: ProfileResponse = await response.json();
-
-        setProfile(data);
-        setExperiences(data.experience);
-        setEducation(data.education);
-        setBio(data.shortBio);
-        setSkills(data.skills);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setLoading(false);
-      }
+    const profileData: ProfileData = {
+      id: data.id,
+      name: data.name ?? "",
+      email: data.email ?? "",
+      shortBio: data.shortBio ?? "",
+      role: data.role ?? "",
+      profilePicture:
+        data.profilePicture ?? "",
     };
 
+    setProfile(profileData);
+
+    setProfileImage(
+      data.profilePicture ?? null
+    );
+
+    /*
+     * Backend returns Skill objects:
+     *
+     * [
+     *   { id: 1, skillName: "Java" }
+     * ]
+     */
+    if (Array.isArray(data.skills)) {
+      setSkillsText(
+        data.skills
+          .map(
+            (skill: {
+              skillName?: string;
+            }) =>
+              skill.skillName ?? ""
+          )
+          .filter(Boolean)
+          .join(", ")
+      );
+    } else {
+      setSkillsText("");
+    }
+
+    /*
+     * Backend field is "experience"
+     */
+    if (Array.isArray(data.experience)) {
+      setExperiences(
+        data.experience.map(
+          (item: any) => ({
+            id: item.id,
+            company:
+              item.company ?? "",
+            role:
+              item.jobTitle ?? "",
+            location: "",
+            startDate:
+              item.startDate ?? "",
+            endDate:
+              item.endDate ?? "",
+            current:
+              item.endDate == null,
+            description:
+              item.description ?? "",
+          })
+        )
+      );
+    } else {
+      setExperiences([]);
+    }
+
+    /*
+     * Backend education format is
+     * slightly different from the old frontend.
+     */
+    if (Array.isArray(data.education)) {
+      setEducation(
+        data.education.map(
+          (item: any) => ({
+            id: item.id,
+            institution:
+              item.institution ?? "",
+            degree:
+              item.degree ?? "",
+            field:
+              item.fieldOfStudy ?? "",
+            startDate:
+              item.startYear
+                ? String(item.startYear)
+                : "",
+            endDate:
+              item.endYear
+                ? String(item.endYear)
+                : "",
+            grade:
+              item.grade ?? "",
+          })
+        )
+      );
+    } else {
+      setEducation([]);
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Profile loading error:",
+      error
+    );
+
+    toast.error(
+      "Unable to load profile."
+    );
+
+  } finally {
+    setLoading(false);
+  }
+};
+
+  /* ==========================================================
+     LOAD PROFILE ON PAGE OPEN
+     ========================================================== */
+
+  useEffect(() => {
     loadProfile();
   }, []);
 
+  /* ==========================================================
+     UPDATE PROFILE FIELD
+     ========================================================== */
+
+  const updateProfile = (
+    field: keyof ProfileData,
+    value: string
+  ) => {
+    setProfile(
+      (previous) => ({
+        ...previous,
+        [field]: value,
+      })
+    );
+  };
+
+  /* ==========================================================
+     PROFILE IMAGE
+     ========================================================== */
+
+  const handleProfileImageChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file =
+      event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    if (
+      !file.type.startsWith("image/")
+    ) {
+      toast.error(
+        "Please select an image file."
+      );
+
+      return;
+    }
+
+    if (
+      file.size >
+      2 * 1024 * 1024
+    ) {
+      toast.error(
+        "Profile image must be smaller than 2MB."
+      );
+
+      return;
+    }
+
+    const reader =
+      new FileReader();
+
+    reader.onload = () => {
+      const imageUrl =
+        reader.result as string;
+
+      setProfileImage(
+        imageUrl
+      );
+
+      toast.success(
+        "Profile picture updated."
+      );
+    };
+
+    reader.readAsDataURL(file);
+  };
+
+  /* ==========================================================
+     REMOVE PROFILE IMAGE
+     ========================================================== */
+
+  const removeProfileImage = () => {
+  setProfileImage(null);
+
+  setProfile(
+    previous => ({
+      ...previous,
+      profilePicture: "",
+    })
+  );
+
+  if (
+    profileImageInputRef.current
+  ) {
+    profileImageInputRef.current.value =
+      "";
+  }
+
+  toast.success(
+    "Profile picture removed."
+  );
+};
+
+  /* ==========================================================
+     SAVE PROFILE
+     ========================================================== */
+
+  const saveProfile = async () => {
+    try {
+      setSaving(true);
+
+      const skills =
+        skillsText
+          .split(",")
+          .map(
+            (skill) =>
+              skill.trim()
+          )
+          .filter(Boolean);
+
+      const payload = {
+        name: profile.name,
+
+        email: profile.email,
+
+       
+        skills,
+
+       
+
+        /*
+         * Send these only if your backend
+         * supports them.
+         */
+        experiences,
+
+        education,
+      };
+
+      const response =
+        await apiFetch(
+          "/profile",
+          {
+            method: "PUT",
+
+            headers: {
+              "Content-Type":
+                "application/json",
+            },
+
+            body:
+              JSON.stringify(
+                payload
+              ),
+          }
+        );
+
+      if (!response.ok) {
+        throw new Error(
+          "Failed to save profile"
+        );
+      }
+
+      setProfile(
+        (previous) => ({
+          ...previous,
+          skills,
+        })
+      );
+
+      toast.success(
+        "Profile updated successfully."
+      );
+    } catch (error) {
+      console.error(
+        "Profile update error:",
+        error
+      );
+
+      toast.error(
+        "Unable to update profile."
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /* ==========================================================
+     LOGOUT
+     ========================================================== */
+
+  const handleLogout = () => {
+
+  localStorage.removeItem(
+    "token"
+  );
+
+  toast.success(
+    "Logged out successfully."
+  );
+
+  window.location.href =
+    "/login";
+};
+
+  /* ==========================================================
+     INITIALS
+     ========================================================== */
+
+  const getInitials = () => {
+    const name =
+      profile.name?.trim();
+
+    if (!name) {
+      return "U";
+    }
+
+    const parts =
+      name.split(/\s+/);
+
+    if (parts.length === 1) {
+      return parts[0]
+        .substring(0, 2)
+        .toUpperCase();
+    }
+
+    return (
+      parts[0][0] +
+      parts[
+        parts.length - 1
+      ][0]
+    ).toUpperCase();
+  };
+
+  /* ==========================================================
+     LOADING
+     ========================================================== */
+
   if (loading) {
-    return <LoadingSpinner />;
+    return (
+      <LoadingSpinner />
+    );
   }
 
-  if (!profile) {
-    return <div>Unable to load profile.</div>;
-  }
+  /* ==========================================================
+     RENDER
+     ========================================================== */
 
-  const addExperience = async (experience: ExperienceRequest) => {
-    const response = await apiFetch("/auth/experience", {
-      method: "POST",
-      body: JSON.stringify(experience),
-    });
-
-    if (!response.ok) {
-      throw new Error("Unable to add experience.");
-    }
-
-    const created = await response.json();
-
-    setExperiences((prev) => [...prev, created]);
-  };
-
-  const updateExperience = async (id: number, experience: ExperienceRequest) => {
-    const response = await apiFetch(`/auth/experience/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(experience),
-    });
-
-    if (!response.ok) {
-      throw new Error("Unable to update experience.");
-    }
-
-    const updated = await response.json();
-
-    setExperiences((prev) => prev.map((e) => (e.id === id ? updated : e)));
-  };
-
-  const deleteExperience = async (id: number) => {
-    const response = await apiFetch(`/auth/experience/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      throw new Error("Unable to delete experience.");
-    }
-
-    setExperiences((prev) => prev.filter((e) => e.id !== id));
-  };
-
-  const addEducation = async (education: EducationRequest) => {
-    const response = await apiFetch("/auth/education", {
-      method: "POST",
-      body: JSON.stringify(education),
-    });
-
-    if (!response.ok) {
-      throw new Error("Unable to add education.");
-    }
-
-    const created = await response.json();
-
-    setEducation((prev) => [...prev, created]);
-  };
-
-  const updateEducation = async (id: number, education: EducationRequest) => {
-    const response = await apiFetch(`/auth/education/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(education),
-    });
-
-    if (!response.ok) {
-      throw new Error("Unable to update education.");
-    }
-
-    const updated = await response.json();
-
-    setEducation((prev) => prev.map((e) => (e.id === id ? updated : e)));
-  };
-
-  const deleteEducation = async (id: number) => {
-    const response = await apiFetch(`/auth/education/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!response.ok) {
-      throw new Error("Unable to delete education.");
-    }
-
-    setEducation((prev) => prev.filter((e) => e.id !== id));
-  };
-
-  const openAddSkill = () => {
-    setEditSkill(null);
-
-    setSkillForm({
-      skillName: "",
-    });
-
-    setIsAddSkillOpen(true);
-  };
-
-  const openEditSkill = (skill: Skill) => {
-    setEditSkill(skill);
-
-    setSkillForm({
-      skillName: skill.skillName,
-    });
-  };
-
-  const saveEducation = async () => {
-    const request = {
-      institution: educationForm.institution,
-      degree: educationForm.degree,
-      fieldOfStudy: educationForm.fieldOfStudy,
-      startYear: educationForm.startYear,
-      endYear: educationForm.endYear,
-      grade: educationForm.grade,
-    };
-
-    if (editEducation) {
-      await updateEducation(editEducation.id, request);
-    } else {
-      await addEducation(request);
-    }
-
-    setEditEducation(null);
-    setIsAddEducationOpen(false);
-    setEducationForm({
-      institution: "",
-      degree: "",
-      fieldOfStudy: "",
-      startYear: 0,
-      endYear: 0,
-      grade: "",
-    });
-  };
-
-  const saveSkill = async () => {
-    const request = {
-      skillName: skillForm.skillName,
-    };
-
-    if (editSkill) {
-      await updateSkill(editSkill.id, request);
-    } else {
-      await addSkill(request);
-    }
-
-    setEditSkill(null);
-    setIsAddSkillOpen(false);
-    setSkillForm({
-      skillName: "",
-    });
-  };
-
-  const saveExperience = async () => {
-    if (editExperience) {
-      await updateExperience(editExperience.id, {
-        company: experienceForm.company,
-        jobTitle: experienceForm.jobTitle,
-        startDate: experienceForm.startDate,
-        endDate: experienceForm.endDate || null,
-        description: experienceForm.description,
-      });
-    } else {
-      await addExperience({
-        company: experienceForm.company,
-        jobTitle: experienceForm.jobTitle,
-        startDate: experienceForm.startDate,
-        endDate: experienceForm.endDate || null,
-        description: experienceForm.description,
-      });
-    }
-
-    setEditExperience(null);
-    setIsAddExperienceOpen(false);
-    setExperienceForm({
-      company: "",
-      jobTitle: "",
-      startDate: "",
-      endDate: "",
-      description: "",
-    });
-  };
   return (
     <div className="space-y-6">
+
+      {/* ======================================================
+          HEADER
+          ====================================================== */}
+
       <PageHeader
-        eyebrow="Profile"
-        title="Your career OS"
-        description="Everything the AI knows about you."
+        eyebrow="Account"
+        title="Profile"
+        description="Manage your personal information, career details, skills and professional background."
+        actions={
+          <Button
+            onClick={
+              saveProfile
+            }
+            disabled={
+              saving
+            }
+          >
+            {saving ? (
+              <>
+                <span className="mr-2 inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="mr-2 size-4" />
+                Save Changes
+              </>
+            )}
+          </Button>
+        }
       />
 
-      <SectionCard>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="grid size-16 shrink-0 place-items-center rounded-2xl gradient-brand text-xl font-bold text-white shadow-glow">
-            {profile.name
-              .split(" ")
-              .map((word) => word[0])
-              .join("")}
-          </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-semibold">{profile.name}</h2>
+      {/* ======================================================
+          PROFILE HERO
+          ====================================================== */}
 
-            <div className="mt-0.5 text-sm text-muted-foreground">{profile.role}</div>
-            <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-              <span className="inline-flex items-center gap-1">
-                <MapPin className="size-3" />
-                San Francisco, CA
-              </span>
-              <span className="inline-flex items-center gap-1">
-                <Sparkles className="size-3" />
-                Targeting Google L5
-              </span>
-            </div>
-          </div>
-          <Button variant="outline" size="sm">
-            Edit profile
-          </Button>
-        </div>
-      </SectionCard>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <SectionCard title="Experience" description="Roles that shape your résumé">
-          <ul className="space-y-3">
-            {experiences.map((e) => (
-              <li key={e.id} className="flex items-start justify-between gap-3">
-                <div className="flex gap-3">
-                  <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
-                    <Briefcase className="size-4" />
-                  </span>
-
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium">{e.jobTitle}</div>
-
-                    <div className="text-xs text-muted-foreground">
-                      {e.company} · {e.startDate} — {e.endDate ?? "Present"}
-                    </div>
-
-                    {e.description && (
-                      <div className="mt-1 text-xs text-muted-foreground">{e.description}</div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => openEditExperience(e)}>
-                    Edit
-                  </Button>
-
-                  <Button size="sm" variant="destructive" onClick={() => deleteExperience(e.id)}>
-                    Delete
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-4 flex justify-end">
-            <Button onClick={openAddExperience}>Add Experience</Button>
-          </div>
-        </SectionCard>
-        <SectionCard title="Education" description="Academic qualifications">
-          <ul className="space-y-3">
-            {education.map((e) => (
-              <li key={e.id} className="flex items-start justify-between gap-3">
-                <div className="flex gap-3">
-                  <span className="mt-0.5 grid size-8 place-items-center rounded-lg bg-muted text-muted-foreground">
-                    <GraduationCap className="size-4" />
-                  </span>
-
-                  <div>
-                    <div className="text-sm font-medium">
-                      {e.degree} in {e.fieldOfStudy}
-                    </div>
-
-                    <div className="text-xs text-muted-foreground">{e.institution}</div>
-
-                    <div className="text-xs text-muted-foreground">
-                      {e.startYear} - {e.endYear}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" onClick={() => openEditEducation(e)}>
-                    Edit
-                  </Button>
-
-                  <Button size="sm" variant="destructive" onClick={() => deleteEducation(e.id)}>
-                    Delete
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-4 flex justify-end">
-            <Button onClick={openAddEducation}>Add Education</Button>
-          </div>
-        </SectionCard>
-      </div>
-
-      <SectionCard title="Skills" description="AI-verified against your resume & practice">
-        <div className="space-y-3">
-          {skills.map((skill) => (
-            <div key={skill.id} className="flex items-center justify-between rounded-lg border p-3">
-              <Badge variant="outline" className="gap-1">
-                <Award className="size-3 text-primary" />
-                {skill.skillName}
-              </Badge>
-
-              <div className="flex gap-2">
-                <Button size="sm" variant="ghost" onClick={() => openEditSkill(skill)}>
-                  Edit
-                </Button>
-
-                <Button size="sm" variant="destructive" onClick={() => deleteSkill(skill.id)}>
-                  Delete
-                </Button>
-              </div>
-            </div>
-          ))}
-
-          <div className="flex justify-end">
-            <Button onClick={openAddSkill}>Add Skill</Button>
-          </div>
-        </div>
-      </SectionCard>
-
-      <SectionCard title="Bio">
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="fn">Full Name</Label>
-            <Input id="fn" value={profile.name} disabled />
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="em">Email</Label>
-            <Input id="em" value={profile.email} disabled />
-          </div>
-
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="bio">Short Bio</Label>
-
-            <Textarea id="bio" rows={4} value={bio} onChange={(e) => setBio(e.target.value)} />
-          </div>
-
-          <div className="sm:col-span-2 flex justify-end">
-            <Button onClick={saveBio}>Save Bio</Button>
-          </div>
-        </div>
-      </SectionCard>
-
-      <Dialog
-        open={editExperience !== null || isAddExperienceOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditExperience(null);
-            setIsAddExperienceOpen(false);
-            setExperienceForm({
-              company: "",
-              jobTitle: "",
-              startDate: "",
-              endDate: "",
-              description: "",
-            });
-          }
-        }}
+      <SectionCard
+        padded={false}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editExperience ? "Edit Experience" : "Add Experience"}</DialogTitle>
-          </DialogHeader>
+        <div className="relative overflow-hidden rounded-xl">
 
-          <div className="space-y-4">
-            <div>
-              <Label>Company</Label>
+          {/* COVER */}
 
-              <Input
-                value={experienceForm.company}
-                onChange={(e) =>
-                  setExperienceForm({
-                    ...experienceForm,
-                    company: e.target.value,
-                  })
-                }
-              />
+          <div className="h-32 bg-gradient-to-r from-primary/20 via-primary/10 to-transparent" />
+
+          <div className="px-6 pb-6">
+
+            <div className="-mt-12 flex flex-col gap-5 sm:flex-row sm:items-end">
+
+              {/* PROFILE IMAGE */}
+
+              <div className="relative shrink-0">
+
+                <div className="size-28 overflow-hidden rounded-full border-4 border-background bg-muted shadow-lg">
+
+                  {profileImage ? (
+                    <img
+                      src={
+                        profileImage
+                      }
+                      alt="Profile"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="grid h-full w-full place-items-center bg-primary/10 text-2xl font-bold text-primary">
+                      {getInitials()}
+                    </div>
+                  )}
+
+                </div>
+
+                <input
+                  ref={
+                    profileImageInputRef
+                  }
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  hidden
+                  onChange={
+                    handleProfileImageChange
+                  }
+                />
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    profileImageInputRef.current?.click()
+                  }
+                  className="absolute -bottom-1 -right-1 grid size-9 place-items-center rounded-full border-2 border-background bg-card shadow-md transition hover:scale-105 hover:bg-muted"
+                  title="Change profile picture"
+                >
+                  <Camera className="size-4 text-muted-foreground" />
+                </button>
+
+              </div>
+
+              {/* PROFILE DETAILS */}
+
+              <div className="min-w-0 flex-1">
+
+                <h2 className="truncate text-xl font-bold">
+                  {profile.name ||
+                    "Your Name"}
+                </h2>
+
+                <p className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+                  <Mail className="size-3.5" />
+
+                  {profile.email ||
+                    "Email not available"}
+                </p>
+
+               
+
+              </div>
+
             </div>
 
-            <div>
-              <Label>Job Title</Label>
+            {/* PHOTO ACTIONS */}
 
-              <Input
-                value={experienceForm.jobTitle}
-                onChange={(e) =>
-                  setExperienceForm({
-                    ...experienceForm,
-                    jobTitle: e.target.value,
-                  })
+            <div className="mt-4 flex flex-wrap gap-2">
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  profileImageInputRef.current?.click()
                 }
-              />
+              >
+                <Camera className="mr-2 size-3.5" />
+                Change Photo
+              </Button>
+
+              {profileImage && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={
+                    removeProfileImage
+                  }
+                  className="text-destructive hover:text-destructive"
+                >
+                  <Trash2 className="mr-2 size-3.5" />
+                  Remove
+                </Button>
+              )}
+
             </div>
 
-            <div>
-              <Label>Start Date</Label>
+          </div>
+
+        </div>
+      </SectionCard>
+
+      {/* ======================================================
+          PERSONAL INFORMATION
+          ====================================================== */}
+
+      <SectionCard
+        title="Personal Information"
+        description="Your basic personal information."
+      >
+
+        <div className="grid gap-5 md:grid-cols-2">
+
+          {/* NAME */}
+
+          <div className="space-y-2">
+
+            <label className="text-sm font-medium">
+              Full Name
+            </label>
+
+            <div className="relative">
+
+              <User className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 
               <Input
-                type="date"
-                value={experienceForm.startDate}
-                onChange={(e) =>
-                  setExperienceForm({
-                    ...experienceForm,
-                    startDate: e.target.value,
-                  })
+                value={
+                  profile.name ??
+                  ""
                 }
+                onChange={(event) =>
+                  updateProfile(
+                    "name",
+                    event.target.value
+                  )
+                }
+                className="pl-9"
+                placeholder="Enter your full name"
               />
+
             </div>
 
-            <div>
-              <Label>End Date</Label>
+          </div>
+
+          {/* EMAIL */}
+
+          <div className="space-y-2">
+
+            <label className="text-sm font-medium">
+              Email
+            </label>
+
+            <div className="relative">
+
+              <Mail className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
 
               <Input
-                type="date"
-                value={experienceForm.endDate}
-                onChange={(e) =>
-                  setExperienceForm({
-                    ...experienceForm,
-                    endDate: e.target.value,
-                  })
+                type="email"
+                value={
+                  profile.email ??
+                  ""
                 }
+                onChange={(event) =>
+                  updateProfile(
+                    "email",
+                    event.target.value
+                  )
+                }
+                className="pl-9"
+                placeholder="Enter your email"
               />
+
             </div>
 
-            <div>
-              <Label>Description</Label>
+          </div>
+
+          {/* PHONE */}
+
+          <div className="space-y-2">
+
+            <label className="text-sm font-medium">
+              Phone
+            </label>
+
+          </div>
+
+          {/* LOCATION */}
+
+          <div className="space-y-2">
+
+            <label className="text-sm font-medium">
+              Location
+            </label>
+
+            <div className="relative">
+
+              <MapPin className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </SectionCard>
+
+      {/* ======================================================
+          CAREER INFORMATION
+          ====================================================== */}
+
+      <SectionCard
+        title="Career Information"
+        description="Tell CareerPilot what kind of opportunities you are targeting."
+      >
+
+        <div className="space-y-5">
+
+          {/* TARGET ROLE */}
+
+          <div className="space-y-2">
+
+            <label className="flex items-center gap-2 text-sm font-medium">
+
+              <Briefcase className="size-4 text-muted-foreground" />
+
+              Target Job Role
+
+            </label>
+
+          </div>
+
+          {/* BIO */}
+
+          <div className="space-y-2">
+
+            <label className="text-sm font-medium">
+              About You
+            </label>
+            <p className="text-xs text-muted-foreground">
+              Keep it concise and focused on your career.
+            </p>
+
+          </div>
+
+        </div>
+
+      </SectionCard>
+
+      {/* ======================================================
+          SKILLS
+          ====================================================== */}
+
+      <SectionCard
+        title="Skills"
+        description="Add the technical and professional skills you want recruiters to see."
+      >
+
+        <div className="space-y-4">
+
+          <div className="space-y-2">
+
+            <label className="flex items-center gap-2 text-sm font-medium">
+
+              <Code2 className="size-4 text-muted-foreground" />
+
+              Your Skills
+
+            </label>
+
+            <Input
+              value={
+                skillsText
+              }
+              onChange={(event) =>
+                setSkillsText(
+                  event.target.value
+                )
+              }
+              placeholder="Java, Spring Boot, React, PostgreSQL, Python"
+            />
+
+            <p className="text-xs text-muted-foreground">
+              Separate each skill using commas.
+            </p>
+
+          </div>
+
+          {skillsText && (
+            <div className="flex flex-wrap gap-2">
+
+              {skillsText
+                .split(",")
+                .map(
+                  (skill) =>
+                    skill.trim()
+                )
+                .filter(Boolean)
+                .map(
+                  (
+                    skill,
+                    index
+                  ) => (
+                    <span
+                      key={`${skill}-${index}`}
+                      className="rounded-full border bg-muted/40 px-3 py-1.5 text-xs font-medium"
+                    >
+                      {skill}
+                    </span>
+                  )
+                )}
+
+            </div>
+          )}
+
+        </div>
+
+      </SectionCard>
+
+      {/* ======================================================
+          EXPERIENCE
+          ====================================================== */}
+
+      <SectionCard
+        title="Experience"
+        description="Add your professional experience, internships and work history."
+      >
+
+        <div className="space-y-5">
+
+          {/* EMPTY STATE */}
+
+          {experiences.length ===
+            0 && (
+            <div className="rounded-xl border border-dashed p-8 text-center">
+
+              <Briefcase className="mx-auto size-8 text-muted-foreground" />
+
+              <h3 className="mt-3 text-sm font-semibold">
+                No experience added
+              </h3>
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                Add your work experience to build a stronger career profile.
+              </p>
+
+            </div>
+          )}
+
+          {/* EXPERIENCE LIST */}
+
+          {experiences.map(
+            (
+              experience,
+              index
+            ) => (
+              <div
+                key={
+                  experience.id ??
+                  index
+                }
+                className="rounded-xl border p-5"
+              >
+
+                <div className="flex items-start justify-between gap-4">
+
+                  <div className="flex gap-3">
+
+                    <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+
+                      <Briefcase className="size-5" />
+
+                    </div>
+
+                    <div>
+
+                      <h3 className="font-semibold">
+                        {
+                          experience.role
+                        }
+                      </h3>
+
+                      <p className="text-sm text-muted-foreground">
+                        {
+                          experience.company
+                        }
+                      </p>
+
+                      {experience.location && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {
+                            experience.location
+                          }
+                        </p>
+                      )}
+
+                      <p className="mt-2 text-xs text-muted-foreground">
+
+                        {
+                          experience.startDate
+                        }
+
+                        {" — "}
+
+                        {experience.current
+                          ? "Present"
+                          : experience.endDate ||
+                            "Present"}
+
+                      </p>
+
+                    </div>
+
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => {
+
+                      setExperiences(
+                        (
+                          previous
+                        ) =>
+                          previous.filter(
+                            (
+                              _,
+                              i
+                            ) =>
+                              i !==
+                              index
+                          )
+                      );
+
+                    }}
+                  >
+                    <Trash2 className="size-4" />
+                  </Button>
+
+                </div>
+
+                {experience.description && (
+                  <p className="mt-4 whitespace-pre-line text-sm leading-6 text-muted-foreground">
+                    {
+                      experience.description
+                    }
+                  </p>
+                )}
+
+              </div>
+            )
+          )}
+
+          {/* ADD EXPERIENCE BUTTON */}
+
+          {!showExperienceForm ? (
+            <Button
+              variant="outline"
+              onClick={() =>
+                setShowExperienceForm(
+                  true
+                )
+              }
+            >
+              <Plus className="mr-2 size-4" />
+
+              Add Experience
+            </Button>
+          ) : (
+
+            /* EXPERIENCE FORM */
+
+            <div className="rounded-xl border bg-muted/20 p-5">
+
+              <div className="mb-5 flex items-center justify-between">
+
+                <div>
+
+                  <h3 className="font-semibold">
+                    Add Experience
+                  </h3>
+
+                  <p className="text-xs text-muted-foreground">
+                    Add your job or internship details.
+                  </p>
+
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    setShowExperienceForm(
+                      false
+                    )
+                  }
+                >
+                  <X className="size-4" />
+                </Button>
+
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+
+                {/* ROLE */}
+
+                <Input
+                  placeholder="Job title"
+                  value={
+                    newExperience.role
+                  }
+                  onChange={(event) =>
+                    setNewExperience(
+                      {
+                        ...newExperience,
+                        role:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+                {/* COMPANY */}
+
+                <Input
+                  placeholder="Company"
+                  value={
+                    newExperience.company
+                  }
+                  onChange={(event) =>
+                    setNewExperience(
+                      {
+                        ...newExperience,
+                        company:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+                {/* LOCATION */}
+
+                <Input
+                  placeholder="Location"
+                  value={
+                    newExperience.location
+                  }
+                  onChange={(event) =>
+                    setNewExperience(
+                      {
+                        ...newExperience,
+                        location:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+                {/* START DATE */}
+
+                <Input
+                  type="date"
+                  value={
+                    newExperience.startDate
+                  }
+                  onChange={(event) =>
+                    setNewExperience(
+                      {
+                        ...newExperience,
+                        startDate:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+                {/* END DATE */}
+
+                <Input
+                  type="date"
+                  value={
+                    newExperience.endDate
+                  }
+                  disabled={
+                    newExperience.current
+                  }
+                  onChange={(event) =>
+                    setNewExperience(
+                      {
+                        ...newExperience,
+                        endDate:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+                {/* CURRENT */}
+
+                <label className="flex items-center gap-2 text-sm">
+
+                  <input
+                    type="checkbox"
+                    checked={
+                      newExperience.current
+                    }
+                    onChange={(event) =>
+                      setNewExperience(
+                        {
+                          ...newExperience,
+                          current:
+                            event
+                              .target
+                              .checked,
+                          endDate:
+                            event
+                              .target
+                              .checked
+                              ? ""
+                              : newExperience.endDate,
+                        }
+                      )
+                    }
+                  />
+
+                  Currently working here
+
+                </label>
+
+              </div>
+
+              {/* DESCRIPTION */}
 
               <Textarea
-                rows={4}
-                value={experienceForm.description}
-                onChange={(e) =>
-                  setExperienceForm({
-                    ...experienceForm,
-                    description: e.target.value,
-                  })
+                className="mt-4 min-h-28"
+                placeholder="Describe your responsibilities, achievements and technologies..."
+                value={
+                  newExperience.description
+                }
+                onChange={(event) =>
+                  setNewExperience(
+                    {
+                      ...newExperience,
+                      description:
+                        event.target
+                          .value,
+                    }
+                  )
                 }
               />
+
+              {/* ADD */}
+
+              <div className="mt-4 flex justify-end">
+
+                <Button
+                  onClick={() => {
+
+                    if (
+                      !newExperience.company ||
+                      !newExperience.role ||
+                      !newExperience.startDate
+                    ) {
+                      toast.error(
+                        "Company, role and start date are required."
+                      );
+
+                      return;
+                    }
+
+                    setExperiences(
+                      (
+                        previous
+                      ) => [
+                        ...previous,
+                        {
+                          ...newExperience,
+                        },
+                      ]
+                    );
+
+                    setNewExperience(
+                      {
+                        company:
+                          "",
+                        role:
+                          "",
+                        location:
+                          "",
+                        startDate:
+                          "",
+                        endDate:
+                          "",
+                        current:
+                          false,
+                        description:
+                          "",
+                      }
+                    );
+
+                    setShowExperienceForm(
+                      false
+                    );
+
+                    toast.success(
+                      "Experience added."
+                    );
+                  }}
+                >
+
+                  <Plus className="mr-2 size-4" />
+
+                  Add Experience
+
+                </Button>
+
+              </div>
+
             </div>
+          )}
+
+        </div>
+
+      </SectionCard>
+
+      {/* ======================================================
+          EDUCATION
+          ====================================================== */}
+
+      <SectionCard
+        title="Education"
+        description="Add your academic qualifications and educational background."
+      >
+
+        <div className="space-y-5">
+
+          {/* EMPTY STATE */}
+
+          {education.length ===
+            0 && (
+            <div className="rounded-xl border border-dashed p-8 text-center">
+
+              <GraduationCap className="mx-auto size-8 text-muted-foreground" />
+
+              <h3 className="mt-3 text-sm font-semibold">
+                No education added
+              </h3>
+
+              <p className="mt-1 text-xs text-muted-foreground">
+                Add your degree or academic qualifications.
+              </p>
+
+            </div>
+          )}
+
+          {/* EDUCATION LIST */}
+
+          {education.map(
+            (
+              item,
+              index
+            ) => (
+              <div
+                key={
+                  item.id ??
+                  index
+                }
+                className="rounded-xl border p-5"
+              >
+
+                <div className="flex items-start justify-between gap-4">
+
+                  <div className="flex gap-3">
+
+                    <div className="grid size-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+
+                      <GraduationCap className="size-5" />
+
+                    </div>
+
+                    <div>
+
+                      <h3 className="font-semibold">
+                        {
+                          item.degree
+                        }
+                      </h3>
+
+                      <p className="text-sm text-muted-foreground">
+                        {
+                          item.institution
+                        }
+                      </p>
+
+                      {item.field && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {
+                            item.field
+                          }
+                        </p>
+                      )}
+
+                      {(item.startDate ||
+                        item.endDate) && (
+                        <p className="mt-2 text-xs text-muted-foreground">
+
+                          {
+                            item.startDate
+                          }
+
+                          {" — "}
+
+                          {
+                            item.endDate ||
+                            "Present"
+                          }
+
+                        </p>
+                      )}
+
+                      {item.grade && (
+                        <p className="mt-2 text-xs font-medium">
+                          Grade:{" "}
+                          {
+                            item.grade
+                          }
+                        </p>
+                      )}
+
+                    </div>
+
+                  </div>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-destructive hover:text-destructive"
+                    onClick={() => {
+
+                      setEducation(
+                        (
+                          previous
+                        ) =>
+                          previous.filter(
+                            (
+                              _,
+                              i
+                            ) =>
+                              i !==
+                              index
+                          )
+                      );
+
+                    }}
+                  >
+
+                    <Trash2 className="size-4" />
+
+                  </Button>
+
+                </div>
+
+              </div>
+            )
+          )}
+
+          {/* ADD EDUCATION */}
+
+          {!showEducationForm ? (
+
+            <Button
+              variant="outline"
+              onClick={() =>
+                setShowEducationForm(
+                  true
+                )
+              }
+            >
+
+              <Plus className="mr-2 size-4" />
+
+              Add Education
+
+            </Button>
+
+          ) : (
+
+            /* EDUCATION FORM */
+
+            <div className="rounded-xl border bg-muted/20 p-5">
+
+              <div className="mb-5 flex items-center justify-between">
+
+                <div>
+
+                  <h3 className="font-semibold">
+                    Add Education
+                  </h3>
+
+                  <p className="text-xs text-muted-foreground">
+                    Add your degree and academic details.
+                  </p>
+
+                </div>
+
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() =>
+                    setShowEducationForm(
+                      false
+                    )
+                  }
+                >
+
+                  <X className="size-4" />
+
+                </Button>
+
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+
+                {/* INSTITUTION */}
+
+                <Input
+                  placeholder="Institution / University"
+                  value={
+                    newEducation.institution
+                  }
+                  onChange={(event) =>
+                    setNewEducation(
+                      {
+                        ...newEducation,
+                        institution:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+                {/* DEGREE */}
+
+                <Input
+                  placeholder="Degree"
+                  value={
+                    newEducation.degree
+                  }
+                  onChange={(event) =>
+                    setNewEducation(
+                      {
+                        ...newEducation,
+                        degree:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+                {/* FIELD */}
+
+                <Input
+                  placeholder="Field of study"
+                  value={
+                    newEducation.field
+                  }
+                  onChange={(event) =>
+                    setNewEducation(
+                      {
+                        ...newEducation,
+                        field:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+                {/* GRADE */}
+
+                <Input
+                  placeholder="CGPA / Percentage"
+                  value={
+                    newEducation.grade
+                  }
+                  onChange={(event) =>
+                    setNewEducation(
+                      {
+                        ...newEducation,
+                        grade:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+                {/* START */}
+
+                <Input
+                  type="date"
+                  value={
+                    newEducation.startDate
+                  }
+                  onChange={(event) =>
+                    setNewEducation(
+                      {
+                        ...newEducation,
+                        startDate:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+                {/* END */}
+
+                <Input
+                  type="date"
+                  value={
+                    newEducation.endDate
+                  }
+                  onChange={(event) =>
+                    setNewEducation(
+                      {
+                        ...newEducation,
+                        endDate:
+                          event.target
+                            .value,
+                      }
+                    )
+                  }
+                />
+
+              </div>
+
+              {/* ADD BUTTON */}
+
+              <div className="mt-4 flex justify-end">
+
+                <Button
+                  onClick={() => {
+
+                    if (
+                      !newEducation.institution ||
+                      !newEducation.degree
+                    ) {
+
+                      toast.error(
+                        "Institution and degree are required."
+                      );
+
+                      return;
+                    }
+
+                    setEducation(
+                      (
+                        previous
+                      ) => [
+                        ...previous,
+                        {
+                          ...newEducation,
+                        },
+                      ]
+                    );
+
+                    setNewEducation(
+                      {
+                        institution:
+                          "",
+                        degree:
+                          "",
+                        field:
+                          "",
+                        startDate:
+                          "",
+                        endDate:
+                          "",
+                        grade:
+                          "",
+                      }
+                    );
+
+                    setShowEducationForm(
+                      false
+                    );
+
+                    toast.success(
+                      "Education added."
+                    );
+
+                  }}
+                >
+
+                  <Plus className="mr-2 size-4" />
+
+                  Add Education
+
+                </Button>
+
+              </div>
+
+            </div>
+          )}
+
+        </div>
+
+      </SectionCard>
+
+      {/* ======================================================
+          PROFESSIONAL LINKS
+
+      {/* ======================================================
+          PROFILE COMPLETENESS
+          ====================================================== */}
+
+      <SectionCard
+        title="Profile Completeness"
+        description="Complete your profile to get better career recommendations."
+      >
+
+        {(() => {
+
+          const fields = [
+            profile.name,
+            profile.email,
+            skillsText,
+            experiences.length >
+              0
+              ? "experience"
+              : "",
+            education.length >
+              0
+              ? "education"
+              : "",
+          ];
+
+          const completed =
+            fields.filter(
+              Boolean
+            ).length;
+
+          const percentage =
+            Math.round(
+              (completed /
+                fields.length) *
+                100
+            );
+
+          return (
+            <div className="space-y-4">
+
+              <div className="flex items-center justify-between">
+
+                <span className="text-sm font-medium">
+                  Profile completion
+                </span>
+
+                <span className="text-sm font-bold">
+                  {percentage}%
+                </span>
+
+              </div>
+
+              <div className="h-2 overflow-hidden rounded-full bg-muted">
+
+                <div
+                  className="h-full rounded-full bg-primary transition-all duration-500"
+                  style={{
+                    width: `${percentage}%`,
+                  }}
+                />
+
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+
+                <CompletionItem
+                  label="Personal information"
+                  completed={
+                    Boolean(
+                      profile.name &&
+                      profile.email
+                    )
+                  }
+                />
+
+               
+
+                <CompletionItem
+                  label="Skills"
+                  completed={
+                    skillsText.trim()
+                      .length > 0
+                  }
+                />
+
+                <CompletionItem
+                  label="Experience"
+                  completed={
+                    experiences.length >
+                    0
+                  }
+                />
+
+                <CompletionItem
+                  label="Education"
+                  completed={
+                    education.length >
+                    0
+                  }
+                />
+
+              </div>
+
+            </div>
+          );
+
+        })()}
+
+      </SectionCard>
+
+      {/* ======================================================
+          SAVE PROFILE
+          ====================================================== */}
+
+      <div className="flex justify-end">
+
+        <Button
+          size="lg"
+          onClick={
+            saveProfile
+          }
+          disabled={
+            saving
+          }
+        >
+
+          {saving ? (
+            <>
+              <span className="mr-2 inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="mr-2 size-4" />
+
+              Save Profile
+            </>
+          )}
+
+        </Button>
+
+      </div>
+
+      {/* ======================================================
+          LOGOUT
+          ====================================================== */}
+
+      <SectionCard
+        title="Account Actions"
+        description="Manage your current session."
+      >
+
+        <div className="rounded-xl border border-destructive/20 bg-destructive/[0.04] p-5">
+
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+            <div>
+
+              <div className="flex items-center gap-2">
+
+                <LogOut className="size-4 text-destructive" />
+
+                <h3 className="text-sm font-semibold text-destructive">
+                  Sign out
+                </h3>
+
+              </div>
+
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                Sign out of your CareerPilot account on this device.
+              </p>
+
+            </div>
+
+            <Button
+              variant="destructive"
+              onClick={
+                handleLogout
+              }
+              className="shrink-0"
+            >
+
+              <LogOut className="mr-2 size-4" />
+
+              Logout
+
+            </Button>
+
           </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEditExperience(null);
-                setIsAddExperienceOpen(false);
+        </div>
 
-                setExperienceForm({
-                  company: "",
-                  jobTitle: "",
-                  startDate: "",
-                  endDate: "",
-                  description: "",
-                });
-              }}
-            >
-              Cancel
-            </Button>
+      </SectionCard>
 
-            <Button onClick={saveExperience}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+    </div>
+  );
+}
 
-      <Dialog
-        open={editEducation !== null || isAddEducationOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditEducation(null);
-            setIsAddEducationOpen(false);
-            setEducationForm({
-              institution: "",
-              degree: "",
-              fieldOfStudy: "",
-              startYear: 0,
-              endYear: 0,
-              grade: "",
-            });
-          }
-        }}
+/* ============================================================
+   COMPLETION ITEM
+   ============================================================ */
+
+function CompletionItem({
+  label,
+  completed,
+}: {
+  label: string;
+  completed: boolean;
+}) {
+  return (
+    <div className="flex items-center justify-between rounded-lg border px-3 py-2.5">
+
+      <span className="text-xs text-muted-foreground">
+        {label}
+      </span>
+
+      <span
+        className={
+          completed
+            ? "text-xs font-medium text-green-600"
+            : "text-xs font-medium text-muted-foreground"
+        }
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editEducation ? "Edit Education" : "Add Education"}</DialogTitle>
-          </DialogHeader>
+        {completed
+          ? "Complete"
+          : "Incomplete"}
+      </span>
 
-          <div className="space-y-4">
-            <Input
-              placeholder="Institution"
-              value={educationForm.institution}
-              onChange={(e) =>
-                setEducationForm({
-                  ...educationForm,
-                  institution: e.target.value,
-                })
-              }
-            />
-
-            <Input
-              placeholder="Degree"
-              value={educationForm.degree}
-              onChange={(e) =>
-                setEducationForm({
-                  ...educationForm,
-                  degree: e.target.value,
-                })
-              }
-            />
-
-            <Input
-              placeholder="Field of Study"
-              value={educationForm.fieldOfStudy}
-              onChange={(e) =>
-                setEducationForm({
-                  ...educationForm,
-                  fieldOfStudy: e.target.value,
-                })
-              }
-            />
-
-            <Input
-              type="number"
-              placeholder="Start Year"
-              value={educationForm.startYear}
-              onChange={(e) =>
-                setEducationForm({
-                  ...educationForm,
-                  startYear: Number(e.target.value),
-                })
-              }
-            />
-
-            <Input
-              type="number"
-              placeholder="End Year"
-              value={educationForm.endYear}
-              onChange={(e) =>
-                setEducationForm({
-                  ...educationForm,
-                  endYear: Number(e.target.value),
-                })
-              }
-            />
-
-            <Input
-              placeholder="Grade"
-              value={educationForm.grade}
-              onChange={(e) =>
-                setEducationForm({
-                  ...educationForm,
-                  grade: e.target.value,
-                })
-              }
-            />
-          </div>
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEditEducation(null);
-                setIsAddEducationOpen(false);
-                setEducationForm({
-                  institution: "",
-                  degree: "",
-                  fieldOfStudy: "",
-                  startYear: 0,
-                  endYear: 0,
-                  grade: "",
-                });
-              }}
-            >
-              Cancel
-            </Button>
-
-            <Button onClick={saveEducation}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog
-        open={editSkill !== null || isAddSkillOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditSkill(null);
-            setIsAddSkillOpen(false);
-            setSkillForm({
-              skillName: "",
-            });
-          }
-        }}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editSkill ? "Edit Skill" : "Add Skill"}</DialogTitle>
-          </DialogHeader>
-
-          <Input
-            placeholder="Skill"
-            value={skillForm.skillName}
-            onChange={(e) =>
-              setSkillForm({
-                skillName: e.target.value,
-              })
-            }
-          />
-
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setEditSkill(null);
-                setIsAddSkillOpen(false);
-                setSkillForm({
-                  skillName: "",
-                });
-              }}
-            >
-              Cancel
-            </Button>
-
-            <Button onClick={saveSkill}>Save</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
